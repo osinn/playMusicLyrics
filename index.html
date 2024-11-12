@@ -1,0 +1,185 @@
+<html>
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+    <title>我的音乐</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="font/iconfont.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/lrc.css">
+</head>
+<body>
+        <div class="container" id="player">
+            <div class="music-lrc">
+                <div class="lrc-list" id="lrc-list2">
+                    <div id="not-lrc">
+                        暂无歌词
+                    </div>
+                </div>
+            </div>
+            <!-- 歌曲信息模块 -->
+            <div id="player-content1" class="active">
+
+                <div class="player-content1-info">
+                    <!-- 歌曲名 -->
+                    <div class="music-name"></div>
+                    <!-- 歌手名 -->
+                    <div class="artist-name"></div>
+                </div>
+                <!-- 歌曲时间 -->
+                <div class="time">
+                    <!-- 当前播放的时间 -->
+                    <div class="current-time"></div>
+                    <!-- 歌曲总时长 -->
+                    <div class="total-time"></div>
+                </div>
+                <div></div>
+                <!-- 进度条 -->
+                <div id="s-area">
+                    <!-- 鼠标移动到进度条上，显示的时间信息 -->
+                    <div id="ins-time"></div>
+                    <!-- 鼠标移动到进度条上，进度条变暗部分-->
+                    <div id="s-hover"></div>
+                    <!-- 表示当前歌曲播放进度的蓝色进度条 -->
+                    <div id="seek-bar"></div>
+                </div>
+            </div>
+
+            <!-- 控制模块 -->
+            <div id="player-content2">
+                <!-- 左侧歌曲封面旋转模块 -->
+                <div class="music-imgs">
+                    <!-- 封面图 -->
+                    <img alt="" class="img" draggable="false">
+                    <!-- 歌曲缓冲时的提示文字 -->
+                    <div id="buffer-box">缓冲…</div>
+                </div>
+                <!-- 右侧歌曲操作模块 -->
+                <div class="player-controls">
+                    <!-- 上一首按钮 -->
+                    <div class="btn prev iconfont">&#xe603;</div>
+                    <!-- 暂停/播放 按钮 -->
+                    <div class="btn play-pause icon-jiediankaishi iconfont"></div>
+                    <!-- 下一首按钮 -->
+                    <div class="btn next iconfont">&#xe602;</div>
+                    <!-- 列表按钮 -->
+                    <div class="close" @click="closeFun">
+                        <span class="icon icon-close" id="close"></span>
+                    </div>
+                    <span class="text2" style="display: none;"></span>
+                    <span class="text3" style="display: none;"></span>
+                </div>
+            </div>
+        </div>
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/parseLrc.js"></script>
+    <script src="js/offsetLrc.js"></script>
+    <script src="js/index.js"></script>
+    <script type="text/javascript">
+        $("#close").click(function() {
+            try{
+                android.hide();
+            } catch (e){
+                android.htmlLog("隐藏桌面歌词组件异常："+ e);
+            }
+        });
+
+         // 点击 播放/暂停 按钮，触发该函数
+        $(".play-pause").click(function() {
+            // android.htmlLog("h5UI 点击playPause");
+            if (!musicState) {
+                try{
+                    // android.htmlLog("h5UI 通知播放");
+                    android.play();
+                    musicState = !musicState;
+                } catch (e){
+                
+                }
+            } else {
+                try{
+                    // android.htmlLog("h5UI 通知暂停");
+                    android.pause();
+                    musicState = !musicState;
+                } catch (e){
+                
+                }
+            }
+        });
+
+        $('.prev').click(function() {
+            try{
+                selectTrack(-1);
+            } catch (e){
+                android.htmlLog("h5UI playPrevBtn异常："+ e);
+            }
+        });
+        $('.next').click(function() {
+            try{
+                selectTrack(1);
+            } catch (e){
+                android.htmlLog("h5UI playNextBtn异常："+ e);
+            }
+        });
+
+        function loadMusicInfo(musicInfo){
+            if(musicInfo) {
+                const info = JSON.parse(musicInfo);
+                artistName.text(info.artist);
+                musicName.text(info.title);
+                musicImgs.find('.img').attr("src", info.artwork);
+                duration = Number(info.duration);
+            }
+        }
+
+        function loadRawLrc(rawLrc){
+            $('.music-lrc div').empty();
+            scrollBottom = 0;
+            $("#lrc-list2").css('bottom', '0');
+            if(rawLrc) {
+                $("#not-lrc").hide();
+                lrc = rawLrc;
+                lrcData = parseLrc();
+                createLrcElements();
+            } else {
+                $("#not-lrc").show();
+            }
+        }
+        function playMusic(){
+            startPlayPause(true);
+        }
+        function pauseMusic(){
+            startPlayPause(false);
+        }
+
+        async function playProgress(progress) {
+            try {
+                if(progress) {
+                    const info = JSON.parse(progress);
+                    // duration
+                    await updateCurrTime(info);
+                }
+
+            } catch (e) {
+            }
+
+        }
+
+        // function updateDesktopLyricColor(textColor){
+        //     if(textColor && textColor.length > 0) {
+        //         $('.music-lrc p').css('color', textColor);
+        //     } else {
+        //         $('.music-lrc p').css('color', '#fff');
+        //     }
+        // }
+
+        // function updateDesktopLyricBackgroundColor(backgroundColor){
+        //     if(backgroundColor && backgroundColor.length > 0) {
+        //         $('.music-lrc').css('background-color', backgroundColor);
+        //     } else {
+        //         $('.music-lrc').css('background-color', '#000000A7');
+        //     }
+        // }
+    </script>
+    <!-- <script src="js/temp.js"></script> -->
+</body>
+</html>
